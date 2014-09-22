@@ -87,7 +87,7 @@ int main(int argc, char *argv[])
     pack.length = 4;
     pack.sequence_number = 5;
     pack.timestamp = 39;
-    strlcpy(pack.message, "Hello", MAXMESSAGE);
+    strcpy(pack.message, "Hello");
     
     int length = sizeof(pack);
     
