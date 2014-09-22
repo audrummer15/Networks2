@@ -5,7 +5,7 @@ import os
 
 from collections import namedtuple
 
-HOST = 'localhost'
+HOST = ''
 PORT = 10014              # 10010 + GID
 
 # A structure to handle packets in RFC form

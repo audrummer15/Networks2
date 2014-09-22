@@ -11,12 +11,21 @@
 #include <sys/types.h>
 #include <netinet/in.h>
 #include <sys/socket.h>
-
+#include <time.h>
 #include <arpa/inet.h>
 
-#define PORT 10014 // 10010 + GID
+#define PORT "10014" // 10010 + GID
+#define MAXMESSAGE 1024
+#define MAXDATASIZE 1038 // max number of bytes we can get at once 
 
-#define MAXDATASIZE 100 // max number of bytes we can get at once 
+struct Packet
+{
+          uint16_t length;
+          uint32_t sequence_number;
+          uint64_t timestamp;
+          char message[MAXMESSAGE];
+};
+
 
 // get sockaddr, IPv4 or IPv6:
 void *get_in_addr(struct sockaddr *sa)
@@ -74,7 +83,17 @@ int main(int argc, char *argv[])
     inet_ntop(p->ai_family, get_in_addr((struct sockaddr *)p->ai_addr),s, sizeof s);
     printf("Connecting to: %s\n", s);
     
+    struct Packet pack;
+    pack.length = 4;
+    pack.sequence_number = 5;
+    pack.timestamp = 39;
+    strlcpy(pack.message, "Hello", MAXMESSAGE);
     
+    int length = sizeof(pack);
+    
+    send(sockfd, &pack, length,0);
+    
+    printf("Client: Sent: '%s'\n",pack.message);
     
     freeaddrinfo(servinfo); // all done with this structure
 	
