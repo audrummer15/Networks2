@@ -16,6 +16,9 @@
 
 #define PORT "10014" // 10010 + GID
 #define MAXMESSAGE 1024
+#define PACKET_LENGTH_SIZE 2
+#define PACKET_SEQUENCE_NUMBER_SIZE 4
+#define PACKET_TIMESTAMP_SIZE 8
 #define MAXDATASIZE 1038 // max number of bytes we can get at once 
 
 struct Packet
@@ -26,6 +29,9 @@ struct Packet
           char message[MAXMESSAGE];
 };
 
+void build_packet(struct Packet *pack, uint32_t sequence_number_in, char *message[]);
+void build_packet_from_socket(struct Packet *pack, char *recived_data[], int data_length);
+void print_packet(struct Packet *pack);
 
 // get sockaddr, IPv4 or IPv6:
 void *get_in_addr(struct sockaddr *sa)
@@ -83,17 +89,25 @@ int main(int argc, char *argv[])
     inet_ntop(p->ai_family, get_in_addr((struct sockaddr *)p->ai_addr),s, sizeof s);
     printf("Connecting to: %s\n", s);
     
-    struct Packet pack;
-    pack.length = 4;
-    pack.sequence_number = 5;
-    pack.timestamp = 39;
-    strcpy(pack.message, "Hello");
+
+    printf("Enter a message to send to server: ");
+    // Read from command line //
+    int bytes_read;
+    unsigned long message_size = MAXMESSAGE;
+    char *string_in;
+    string_in = (char *) malloc (MAXMESSAGE + 1);
+   	bytes_read = getline(&string_in, &message_size, stdin);
+   	string_in[bytes_read-1] = '\0'; //Removed newline
+
+    struct Packet packet_sent;
+    build_packet(&packet_sent,1,&string_in);
+    print_packet(&packet_sent);
     
-    int length = sizeof(pack);
+    int length = sizeof(packet_sent);
     
-    send(sockfd, &pack, length,0);
-    
-    printf("Client: Sent: '%s'\n",pack.message);
+    if (sendto(sockfd,&packet_sent,sizeof(packet_sent),0,p->ai_addr,p->ai_addrlen)==-1) {
+        printf("Client: Send Error:%s",strerror(errno));
+    }
     
     freeaddrinfo(servinfo); // all done with this structure
 	
@@ -105,8 +119,38 @@ int main(int argc, char *argv[])
     buf[numbytes] = '\0';
     
     printf("client: received: '%s'\n",buf);
+    
+//    struct Packet packet_recieved;
+//    build_packet_from_socket(&packet_recieved, buf, numbytes);
+//    print_packet(&packet_recieved);
+//    uint64_t roundtrip = (time(NULL) * 1000) - packet_sent.timestamp;
+//    printf("Round Trip Time: %llu, roundtrip);
+    
 
     close(sockfd);
 
     return 0;
+}
+
+void build_packet(struct Packet *pack, uint32_t sequence_number_in, char *message[])
+{
+	pack->sequence_number = sequence_number_in;
+	pack->timestamp  = time(NULL) * 1000;
+	strcpy(pack->message, *message); 
+	pack->length = strlen(*message) + PACKET_LENGTH_SIZE+PACKET_TIMESTAMP_SIZE+PACKET_SEQUENCE_NUMBER_SIZE;
+}
+void build_packet_from_socket(struct Packet *pack, char *recived_data[], int data_length)
+{
+	memcpy((void*)pack->length, recived_data, PACKET_LENGTH_SIZE);
+	memcpy((void*)pack->timestamp, recived_data+PACKET_LENGTH_SIZE,PACKET_LENGTH_SIZE);
+	memcpy((void*)pack->sequence_number, recived_data+PACKET_LENGTH_SIZE+PACKET_LENGTH_SIZE,PACKET_SEQUENCE_NUMBER_SIZE);
+	memcpy((void*)pack->message, recived_data +PACKET_LENGTH_SIZE+PACKET_LENGTH_SIZE+PACKET_SEQUENCE_NUMBER_SIZE,data_length -(PACKET_LENGTH_SIZE+PACKET_TIMESTAMP_SIZE+PACKET_SEQUENCE_NUMBER_SIZE));
+}
+void print_packet(struct Packet *pack)
+{
+	printf("Packet ======= \n");
+	printf("  Length: %d \n", pack->length);
+	printf("  Sequence Number: %d \n", pack->sequence_number);
+	printf("  Timestamp: %llu \n", pack->timestamp);
+	printf("  Message: %s \n\n", pack->message);
 }
