@@ -121,6 +121,7 @@ void build_packet(struct Packet *pack, uint32_t sequence_number_in, char *messag
 	pack->sequence_number = sequence_number_in;
 	pack->timestamp  = time(NULL) * 1000;
 	strcpy(pack->message, *message); 
+    printf( "String Length: %ld", strlen(*message));
 	pack->length = strlen(*message) + PACKET_LENGTH_SIZE+PACKET_TIMESTAMP_SIZE+PACKET_SEQUENCE_NUMBER_SIZE;
 	printf("Packet going out: %s\n",pack);
 }
@@ -131,10 +132,10 @@ void build_packet_from_socket(struct Packet *pack, char recieved_data[], int dat
 	memcpy(pack, recieved_data, data_length);
 	printf("Packet out: %s\n",pack);
 }
-void build_string_from_packet(struct Packet *pack,char *buffer_out[])
+void build_string_from_packet(struct Packet *pack, char *buffer_out[])
 {
 	*buffer_out = (char*)malloc(pack->length+3);
-	snprintf(*buffer_out,pack->length + 3,"%u%u%llu%s",pack->length,pack->sequence_number,pack->timestamp,pack->message);
+	memcpy(buffer_out, pack, (pack->length+3));
 }
 void print_packet(struct Packet *pack)
 {
