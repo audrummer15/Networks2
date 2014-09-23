@@ -1,5 +1,6 @@
 /*
-** client.c -- a stream socket client demo
+** client11c.c -- a datagram "client" sending 100,000 packets
+**					Tracks the round trip time and reports the highest, lowest and average
 */
 
 #include <stdio.h>
@@ -7,13 +8,14 @@
 #include <unistd.h>
 #include <errno.h>
 #include <string.h>
-#include <netdb.h>
 #include <sys/types.h>
-#include <netinet/in.h>
 #include <sys/socket.h>
-#include <time.h>
+#include <netinet/in.h>
 #include <arpa/inet.h>
+#include <netdb.h>
+#include <time.h>
 
+#define SERVERPORT "10014"    // the port users will be connecting to
 #define PORT "10014" // 10010 + GID
 #define MAXMESSAGE 1024
 #define PACKET_LENGTH_SIZE 2
@@ -30,51 +32,37 @@ struct Packet
 };
 
 void build_packet(struct Packet *pack, uint32_t sequence_number_in, char *message[]);
-void build_packet_from_socket(struct Packet *pack, char *recived_data[], int data_length);
+void build_packet_from_socket(struct Packet *pack, char recived_data[], int data_length);
 void print_packet(struct Packet *pack);
+void build_string_from_packet(struct Packet *pack,char *buffer_out[]);
 
-// get sockaddr, IPv4 or IPv6:
-void *get_in_addr(struct sockaddr *sa)
-{
-    if (sa->sa_family == AF_INET) {
-        return &(((struct sockaddr_in*)sa)->sin_addr);
-    }
-
-    return &(((struct sockaddr_in6*)sa)->sin6_addr);
-}
 
 int main(int argc, char *argv[])
 {
-    int sockfd, numbytes;  
-    char buf[MAXDATASIZE];
+    int sockfd;
     struct addrinfo hints, *servinfo, *p;
     int rv;
-    char s[INET6_ADDRSTRLEN];
+    int numbytes;
 
-    if (argc != 2) {
-        fprintf(stderr,"usage: client hostname\n");
+    if (argc != 3) {
+        fprintf(stderr,"usage: talker hostname message\n");
         exit(1);
     }
 
     memset(&hints, 0, sizeof hints);
     hints.ai_family = AF_UNSPEC;
-    hints.ai_socktype = SOCK_STREAM;
+    hints.ai_socktype = SOCK_DGRAM;
 
-    if ((rv = getaddrinfo(argv[1], PORT, &hints, &servinfo)) != 0) {
+    if ((rv = getaddrinfo(argv[1], SERVERPORT, &hints, &servinfo)) != 0) {
         fprintf(stderr, "getaddrinfo: %s\n", gai_strerror(rv));
         return 1;
     }
 
-    // loop through all the results and connect to the first we can
+    // loop through all the results and make a socket
     for(p = servinfo; p != NULL; p = p->ai_next) {
-        if ((sockfd = socket(p->ai_family, p->ai_socktype,p->ai_protocol)) == -1) {
-            perror("client: socket");
-            continue;
-        }
-
-        if (connect(sockfd, p->ai_addr, p->ai_addrlen) == -1) {
-            close(sockfd);
-            perror("client: connect");
+        if ((sockfd = socket(p->ai_family, p->ai_socktype,
+                p->ai_protocol)) == -1) {
+            perror("talker: socket");
             continue;
         }
 
@@ -82,67 +70,82 @@ int main(int argc, char *argv[])
     }
 
     if (p == NULL) {
-        fprintf(stderr, "client: failed to connect\n");
+        fprintf(stderr, "talker: failed to bind socket\n");
         return 2;
     }
-
-    inet_ntop(p->ai_family, get_in_addr((struct sockaddr *)p->ai_addr),s, sizeof s);
-    printf("Connecting to: %s\n", s);
-    
-    
-    int mypid = fork();
-    
-    if( 0 == mypid )
-    {
-	//Child
+ 	
+ 	int mypid = fork();
+ 	
+ 	if( 0 == mypid )
+ 	{
+	 	//Child
+	 	
+	 	int count = 1, next_sequence_number=1;
+	 	char buf[MAXDATASIZE];
+	 	unsinged long roundtrip_high=0, roundtrip_low=0, roundtrip_avg=0;
+	 	while (count < 100000)
+	 	{
+	 	
+	 	    if ((numbytes = recv(sockfd, buf, MAXDATASIZE-1, 0)) == -1) {
+	 	    	perror("recv");
+	 	    	exit(1);
+	 	    }
+	 	    
+	 	    buf[numbytes] = '\0';
+	 	    
+	 	    printf("client: received: '%s'\n",buf);
+	 	
+	 		struct Packet packet_recieved;
+	 		build_packet_from_socket(&packet_recieved,buf,numbytes);
+	 		print_packet(&packet_recieved);
+	 		
+	 		if(next_sequence_number = packet_recieved.sequence_number)
+	 		{
+		 		unsigned long roundtrip_time= (time(NULL) * 100)- packet_recieved.timestamp;
+		 		if (roundtrip_time > roundtrip_high)
+		 			roundtrip_high = roundtrip_time;
+		 		else if (roundtrip_time < roundtrip_low)
+		 			roundtrip_low = roundtrip_time;
+		 		rounttrip_avg += roundtrip_time;
+		 		
+		 		count++;
+		 	}
+		 	else
+		 	{
+		 		
+		 	}
+	 	}
+	 	//round trip times
+	 	
+	 	printf("Round trip time: %lu ms\n", roundtriptime);
+ 	}
+ 	else
+ 	{
+ 	    //Parent
+ 		int count = 1;
+ 		char *count_buffer;
+ 		count_buffer = (char *) malloc (20 + 1);
+ 		while (count < 100000)
+ 		{
+	 		struct Packet packet_sent;
+	 		sprintf(count_buffer, "%d", count);
+	 		build_packet(&packet_sent,count,&count_buffer);
+	 		print_packet(&packet_sent);
+	 		char *buffer;
+	 		build_string_from_packet(&packet_sent,&buffer);
+	 		
+	 		if ((numbytes = sendto(sockfd, buffer, (packet_sent.length + 3), 0,p->ai_addr, p->ai_addrlen)) == -1) {
+	 		    perror("client to server: sendto");
+	 		    exit(1);
+	 		}
+ 		
+ 		
+ 			count++;
+ 		}
+ 	}	
 	
-	int count = 1;
-	while (count < 100000)
-	{
-		if ((numbytes = recv(sockfd, buf, MAXDATASIZE-1, 0)) == -1) {
-			perror("recv");
-			exit(1);
-		}
-		
-		 buf[numbytes] = '\0';
-		
-		 printf("client: received: '%s'\n",buf);
-		
-	//   struct Packet packet_recieved;
-	//   build_packet_from_socket(&packet_recieved, buf, numbytes);
-	//   print_packet(&packet_recieved);
-	//   uint64_t roundtrip = (time(NULL) * 1000) - packet_sent.timestamp;
-	//   printf("Round Trip Time: %llu, roundtrip);
-		count++;
-	}    
-	    	
-    }
-    else
-    {
-        //Parent
-        int count = 1;
-        char *count_buffer;
-        count_buffer = (char *) malloc (20 + 1);
-        while (count < 100000)
-        {
-	        struct Packet packet_sent;
-	        char str[15];
-	        sprintf(count_buffer, "%d", count);
-	        build_packet(&packet_sent,count,&count_buffer);
-	        print_packet(&packet_sent);
-	        
-	        int length = sizeof(packet_sent);
-	        if (sendto(sockfd,&packet_sent,sizeof(packet_sent),0,p->ai_addr,p->ai_addrlen)==-1) {
-	            printf("Client: Send Error:%s",strerror(errno));
-	        }
-	        
-	        free(&packet_sent);
-	        count++;
-	    } 
-	        
-        freeaddrinfo(servinfo); // all done with this structure
-    }
-    
+    freeaddrinfo(servinfo);
+        
     close(sockfd);
 
     return 0;
@@ -155,12 +158,17 @@ void build_packet(struct Packet *pack, uint32_t sequence_number_in, char *messag
 	strcpy(pack->message, *message); 
 	pack->length = strlen(*message) + PACKET_LENGTH_SIZE+PACKET_TIMESTAMP_SIZE+PACKET_SEQUENCE_NUMBER_SIZE;
 }
-void build_packet_from_socket(struct Packet *pack, char *recived_data[], int data_length)
+void build_packet_from_socket(struct Packet *pack, char recived_data[], int data_length)
 {
-	memcpy((void*)pack->length, recived_data, PACKET_LENGTH_SIZE);
-	memcpy((void*)pack->timestamp, recived_data+PACKET_LENGTH_SIZE,PACKET_LENGTH_SIZE);
-	memcpy((void*)pack->sequence_number, recived_data+PACKET_LENGTH_SIZE+PACKET_LENGTH_SIZE,PACKET_SEQUENCE_NUMBER_SIZE);
-	memcpy((void*)pack->message, recived_data +PACKET_LENGTH_SIZE+PACKET_LENGTH_SIZE+PACKET_SEQUENCE_NUMBER_SIZE,data_length -(PACKET_LENGTH_SIZE+PACKET_TIMESTAMP_SIZE+PACKET_SEQUENCE_NUMBER_SIZE));
+//	memcpy((void*)pack->length, recived_data, PACKET_LENGTH_SIZE);
+//	memcpy((void*)pack->timestamp, recived_data+PACKET_LENGTH_SIZE,PACKET_LENGTH_SIZE);
+//	memcpy((void*)pack->sequence_number, recived_data+PACKET_LENGTH_SIZE+PACKET_LENGTH_SIZE,PACKET_SEQUENCE_NUMBER_SIZE);
+//	memcpy((void*)pack->message, recived_data +PACKET_LENGTH_SIZE+PACKET_LENGTH_SIZE+PACKET_SEQUENCE_NUMBER_SIZE,data_length -(PACKET_LENGTH_SIZE+PACKET_TIMESTAMP_SIZE+PACKET_SEQUENCE_NUMBER_SIZE));
+}
+void build_string_from_packet(struct Packet *pack,char *buffer_out[])
+{
+	*buffer_out = (char*)malloc(pack->length+3);
+	snprintf(*buffer_out,pack->length + 3,"%u%u%llu%s",pack->length,pack->sequence_number,pack->timestamp,pack->message);	
 }
 void print_packet(struct Packet *pack)
 {

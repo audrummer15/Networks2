@@ -31,7 +31,7 @@ struct Packet
 };
 
 void build_packet(struct Packet *pack, uint32_t sequence_number_in, char *message[]);
-void build_packet_from_socket(struct Packet *pack, char *recived_data[], int data_length);
+void build_packet_from_socket(struct Packet *pack, char recived_data[], int data_length);
 void print_packet(struct Packet *pack);
 void build_string_from_packet(struct Packet *pack,char *buffer_out[]);
 
@@ -103,9 +103,15 @@ int main(int argc, char *argv[])
     
      printf("client: received: '%s'\n",buf);
 
+	struct Packet packet_recieved;
+	build_packet_from_socket(&packet_recieved,buf,numbytes);
+	print_packet(&packet_recieved);
+	
     freeaddrinfo(servinfo);
-
-    printf("talker: sent %d bytes to %s\n", numbytes, argv[1]);
+    
+	unsigned long roundtriptime= (time(NULL) * 100)- packet_recieved.timestamp;
+    printf("Round trip time: %lu ms\n", roundtriptime);
+    
     close(sockfd);
 
     return 0;
@@ -117,24 +123,25 @@ void build_packet(struct Packet *pack, uint32_t sequence_number_in, char *messag
 	pack->timestamp  = time(NULL) * 1000;
 	strcpy(pack->message, *message); 
 	pack->length = strlen(*message) + PACKET_LENGTH_SIZE+PACKET_TIMESTAMP_SIZE+PACKET_SEQUENCE_NUMBER_SIZE;
+	printf("Packet going out: %s\n",pack);
 }
-void build_packet_from_socket(struct Packet *pack, char *recived_data[], int data_length)
+void build_packet_from_socket(struct Packet *pack, char recieved_data[], int data_length)
 {
-//	memcpy((void*)pack->length, recived_data, PACKET_LENGTH_SIZE);
-//	memcpy((void*)pack->timestamp, recived_data+PACKET_LENGTH_SIZE,PACKET_LENGTH_SIZE);
-//	memcpy((void*)pack->sequence_number, recived_data+PACKET_LENGTH_SIZE+PACKET_LENGTH_SIZE,PACKET_SEQUENCE_NUMBER_SIZE);
-//	memcpy((void*)pack->message, recived_data +PACKET_LENGTH_SIZE+PACKET_LENGTH_SIZE+PACKET_SEQUENCE_NUMBER_SIZE,data_length -(PACKET_LENGTH_SIZE+PACKET_TIMESTAMP_SIZE+PACKET_SEQUENCE_NUMBER_SIZE));
+	memset(pack,0,data_length);
+	printf("Data in:%s\n",recieved_data);
+	memcpy(pack, recieved_data, data_length);
+	printf("Packet out: %s\n",pack);
 }
 void build_string_from_packet(struct Packet *pack,char *buffer_out[])
 {
 	*buffer_out = (char*)malloc(pack->length+3);
-	snprintf(*buffer_out,pack->length + 3,"%u%u%llu%s",pack->length,pack->sequence_number,pack->timestamp,pack->message);	
+	snprintf(*buffer_out,pack->length + 3,"%u%u%llu%s",pack->length,pack->sequence_number,pack->timestamp,pack->message);
 }
 void print_packet(struct Packet *pack)
 {
 	printf("Packet ======= \n");
-	printf("  Length: %d \n", pack->length);
-	printf("  Sequence Number: %d \n", pack->sequence_number);
+	printf("  Length: %hu \n", pack->length);
+	printf("  Sequence Number: %u \n", pack->sequence_number);
 	printf("  Timestamp: %llu \n", pack->timestamp);
 	printf("  Message: %s \n\n", pack->message);
 }
