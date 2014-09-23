@@ -31,12 +31,13 @@ while 1:
 	datarecv = conn.recv(1024)
 
 	#If the data isn't there, close the connection and continue listening
-	if not data:
+	if not datarecv:
 		conn.close()
 		continue
-
-	data = unpack('cII', datarecv)
-
+	print 'Datarecv length', len(datarecv)
+	
+	#data = unpack('cII', datarecv)
+	data = datarecv
 	print 'Data: ', data
 
 	# Construct a request packet for easier referencing (Adam - not sure if needed)
