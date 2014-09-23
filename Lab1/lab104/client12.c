@@ -1,5 +1,6 @@
 /*
-** client.c -- a stream socket client demo
+** client12.c -- a stream socket client 
+** Adam Brown, Ben Gustafson
 */
 
 #include <stdio.h>
@@ -164,8 +165,3 @@ void creat_repsonse_packet(struct Response *response_packet, char data_recieved[
 	response_packet->answer = ntohl(response_packet->answer);
 	response_packet->valid = data_recieved[13];
 }
-
-
-
-
-

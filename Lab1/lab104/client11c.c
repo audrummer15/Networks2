@@ -1,6 +1,7 @@
 /*
 ** client11c.c -- a datagram "client" sending 100,000 packets
 **					Tracks the round trip time and reports the highest, lowest and average
+** Adam Brown, Ben Gustafson
 */
 
 #include <stdio.h>

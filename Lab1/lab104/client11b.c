@@ -1,5 +1,6 @@
 /*
-** talker.c -- a datagram "client" demo
+** client11b.c
+** Adam Brown, Ben Gustafson
 */
 
 #include <stdio.h>

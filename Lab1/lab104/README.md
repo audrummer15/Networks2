@@ -2,8 +2,8 @@ Networks2
 =========
 - COMP 6320/6326/5320
 - Assignment 1, Group 4
-- Adam Brown
-- Ben Gustafson
+- Adam Brown, amb0027@auburn.edu
+- Ben Gustafson, brg0005@auburn.edu
 
 Overview: 
 -------------
@@ -94,3 +94,9 @@ We had a very hard time moving the lab12 to the tux machines. We are still curre
 
 
 
+long time; /* know C? */
+Unprecedented performance: Nothing ever ran this slow before.
+Any sufficiently advanced bug is indistinguishable from a feature.
+Real Programmers confuse Halloween and Christmas, because dec 25 == oct 31.
+The best way to accelerate an IBM is at 9.8 m/s/s.
+recursion (re - cur' - zhun) n. 1. (see recursion)
