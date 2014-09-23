@@ -83,8 +83,9 @@ int main(int argc, char *argv[])
 
     struct Packet packet_sent;
     build_packet(&packet_sent,1,&string_in);
-    print_packet(&packet_sent);
+    //DEBUG print_packet(&packet_sent);
     char **buffer;
+    buffer = (char**)malloc(packet_sent.length + 3);
     build_string_from_packet(&packet_sent,buffer);
     
     if ((numbytes = sendto(sockfd, buffer, (packet_sent.length + 3), 0,p->ai_addr, p->ai_addrlen)) == -1) {
@@ -101,12 +102,14 @@ int main(int argc, char *argv[])
     buf[numbytes] = '\0';
 	struct Packet packet_recieved;
 	build_packet_from_socket(&packet_recieved,buf,numbytes);
-	print_packet(&packet_recieved);
+	//DEBUG print_packet(&packet_recieved);
 	
+    printf("%s\n", (char*)packet_recieved.message);
     freeaddrinfo(servinfo);
-    unsigned long time_now =(time(NULL)* 1000);
-    printf("Now: %lu , Timestamp: %llu \n ", time_now, packet_recieved.timestamp);
-	unsigned long roundtriptime= time_now- packet_recieved.timestamp;
+    struct timeval tv;
+    gettimeofday(&tv, NULL);
+    //DEBUG printf("Now: %lu , Timestamp: %llu \n ", time_now, packet_recieved.timestamp);
+	unsigned long roundtriptime= ((unsigned long long)(tv.tv_sec) * 1000 + (unsigned long long)(tv.tv_usec) / 1000) - packet_recieved.timestamp;
     printf("Round trip time: %lu ms\n", roundtriptime);
     
     close(sockfd);
@@ -116,10 +119,12 @@ int main(int argc, char *argv[])
 
 void build_packet(struct Packet *pack, uint32_t sequence_number_in, char *message[])
 {
-	pack->sequence_number = sequence_number_in;
-	pack->timestamp  = time(NULL) * 1000;
+    struct timeval tv;
+    gettimeofday(&tv, NULL);
+	
+    pack->sequence_number = sequence_number_in;
+	pack->timestamp = (unsigned long long)(tv.tv_sec) * 1000 + (unsigned long long)(tv.tv_usec) / 1000;
 	strcpy(pack->message, *message); 
-    printf( "String Length: %ld", strlen(*message));
 	pack->length = strlen(*message) + PACKET_LENGTH_SIZE+PACKET_TIMESTAMP_SIZE+PACKET_SEQUENCE_NUMBER_SIZE;
 }
 void build_packet_from_socket(struct Packet *pack, char recieved_data[], int data_length)
@@ -129,7 +134,6 @@ void build_packet_from_socket(struct Packet *pack, char recieved_data[], int dat
 }
 void build_string_from_packet(struct Packet *pack, char *buffer_out[])
 {
-	*buffer_out = (char*) malloc(pack->length+3);
 	memcpy(buffer_out, pack, (pack->length+3));
 }
 void print_packet(struct Packet *pack)
