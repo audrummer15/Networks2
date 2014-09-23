@@ -35,9 +35,10 @@ while 1:
 		conn.close()
 		continue
 	print 'Datarecv length', len(datarecv)
+	print 'Data', datarecv
 	
-	#data = unpack('cII', datarecv)
-	data = datarecv
+	data = unpack('cII', datarecv)
+	
 	print 'Data: ', data
 
 	# Construct a request packet for easier referencing (Adam - not sure if needed)

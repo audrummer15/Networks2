@@ -100,12 +100,15 @@ int main(int argc, char *argv[])
     request_sent.a = atoi(argv[3]);
     request_sent.b = atoi(argv[4]);
     request_sent.op_code = *argv[5];
-    char **send_buffer;
-   	send_buffer = (char**)malloc(REQUEST_SIZE);
- 	creat_buffer_to_send(&request_sent, send_buffer);
+    
+    char *send_buffer;
+   	send_buffer = (char*) malloc(REQUEST_SIZE);
+ 	creat_buffer_to_send(&request_sent, &send_buffer);
  	print_request_packet(&request_sent);
- 
-    send(sockfd,send_buffer ,REQUEST_SIZE, 0);
+ 	
+ 	printf("Buffer: %s\n", &send_buffer);
+ 	
+    send(sockfd,&send_buffer,REQUEST_SIZE, 0);
     
     freeaddrinfo(servinfo); // all done with this structure
     
@@ -117,11 +120,10 @@ int main(int argc, char *argv[])
 
     buf[numbytes] = '\0';
 
+	
     struct Response response_packet;
     creat_repsonse_packet(&response_packet, buf);
     print_response_packet(&response_packet);
-    
-    printf("client: received: '%s'\n",buf);
 
     close(sockfd);
 
@@ -145,6 +147,7 @@ void print_response_packet(struct Response *response_packet)
 }
 void creat_buffer_to_send(struct Request *request_packet, char *buffer_out[])
 {
+	memset(buffer_out,0,REQUEST_SIZE);
 	memcpy(buffer_out, request_packet, REQUEST_SIZE);
 }
 void creat_repsonse_packet(struct Response *response_packet, char data_recieved[])
