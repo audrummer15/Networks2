@@ -14,7 +14,6 @@
 #include <netdb.h>
 #include <time.h>
 
-#define SERVERPORT "10014"    // the port users will be connecting to
 #define PORT "10014" // 10010 + GID
 #define MAXMESSAGE 1024
 #define PACKET_LENGTH_SIZE 2
@@ -28,7 +27,7 @@ struct Packet
           uint32_t sequence_number;
           uint64_t timestamp;
           char message[MAXMESSAGE];
-};
+}__attribute__((__packed__));
 
 void build_packet(struct Packet *pack, uint32_t sequence_number_in, char *message[]);
 void build_packet_from_socket(struct Packet *pack, char recived_data[], int data_length);
@@ -44,7 +43,7 @@ int main(int argc, char *argv[])
     int numbytes;
 
     if (argc != 3) {
-        fprintf(stderr,"usage: talker hostname message\n");
+        fprintf(stderr,"Please use: ./client11b.o hostname port#\n");
         exit(1);
     }
 
@@ -52,7 +51,7 @@ int main(int argc, char *argv[])
     hints.ai_family = AF_UNSPEC;
     hints.ai_socktype = SOCK_DGRAM;
 
-    if ((rv = getaddrinfo(argv[1], SERVERPORT, &hints, &servinfo)) != 0) {
+    if ((rv = getaddrinfo(argv[1], argv[2], &hints, &servinfo)) != 0) {
         fprintf(stderr, "getaddrinfo: %s\n", gai_strerror(rv));
         return 1;
     }
