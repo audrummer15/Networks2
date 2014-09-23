@@ -11,7 +11,7 @@ import os
 from collections import namedtuple
 from struct import *
 
-HOST = 'localhost'
+HOST = '0.0.0.0'
 PORT = 10014              # 10010 + GID
 
 # A structure to handle packets in RFC form (Adam - not sure if needed anymore)
@@ -31,7 +31,7 @@ while 1:
 	datarecv = conn.recv(1024)
 
 	#If the data isn't there, close the connection and continue listening
-	if not data:
+	if not datarecv:
 		conn.close()
 		continue
 
