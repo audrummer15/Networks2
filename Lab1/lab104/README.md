@@ -90,7 +90,7 @@ Report:
 -------------
 All of our code works on our local (mac) machines. 
 
-We had a very hard time moving the lab12 to the tux machines. We are still currently unable to guarantee the server and the client will interact appropriately on the tux machines. It appears there are two different byte orders on the mac kernel and the linux kernel. Meaning the adjustments made on the the tux machines interfered with the edits make on the Mac. We were unable to copy the structs of a packet into a buffer to be sent, decoded correctly, modified, placed in a buffer and sent back to be decoded again. It appears at each encoding and decoding byte orders changed causing problems for the calculations. With more time all the bugs could be found but it is fairly buggy currently, but again it was working just fine on our Mac's.
+We had a very hard time moving the lab12 to the tux machines. We are still currently unable to guarantee the server and the client will interact appropriately on the tux machines. It appears there is padding added to the buffere when reading in from python. With more time all the bugs could be found but it is fairly buggy currently, but again it was working just fine on our Mac's.
 
 
 
