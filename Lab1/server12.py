@@ -34,10 +34,9 @@ while 1:
 	if not datarecv:
 		conn.close()
 		continue
-	print 'Datarecv length', len(datarecv)
-	
-	#data = unpack('cII', datarecv)
-	data = datarecv
+
+	data = unpack('!cII', datarecv)
+
 	print 'Data: ', data
 
 	# Construct a request packet for easier referencing (Adam - not sure if needed)
@@ -62,6 +61,7 @@ while 1:
 
 	# Pack the data back in and send it back to the origin
 	resp = pack('cIIIc', req.operator, req.operand1, req.operand2, result, ansIsValid)
+	print "Length: ", len(resp)
 	conn.send(resp)
 
 	conn.close()
