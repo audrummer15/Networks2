@@ -12,7 +12,6 @@
 #include <netinet/in.h>
 #include <arpa/inet.h>
 #include <netdb.h>
-#include <time.h>
 
 #define SERVERPORT "10014"    // the port users will be connecting to
 #define PORT "10014" // 10010 + GID
@@ -33,7 +32,7 @@ struct Packet
 void build_packet(struct Packet *pack, uint32_t sequence_number_in, char *message[]);
 void build_packet_from_socket(struct Packet *pack, char *recived_data[], int data_length);
 void print_packet(struct Packet *pack);
-void build_string_from_packet(struct Packet *pack,char *buffer_out[]);
+
 
 
 int main(int argc, char *argv[])
@@ -85,23 +84,12 @@ int main(int argc, char *argv[])
     struct Packet packet_sent;
     build_packet(&packet_sent,1,&string_in);
     print_packet(&packet_sent);
-    char *buffer;
-    build_string_from_packet(&packet_sent,&buffer);
     
-    if ((numbytes = sendto(sockfd, buffer, (packet_sent.length + 3), 0,p->ai_addr, p->ai_addrlen)) == -1) {
+    int length = sizeof(packet_sent);
+    if ((numbytes = sendto(sockfd, &packet_sent, sizeof(packet_sent), 0,p->ai_addr, p->ai_addrlen)) == -1) {
         perror("client to server: sendto");
         exit(1);
     }
-    
-    char buf[MAXDATASIZE];
-    if ((numbytes = recv(sockfd, buf, MAXDATASIZE-1, 0)) == -1) {
-    	perror("recv");
-    	exit(1);
-    }
-    
-     buf[numbytes] = '\0';
-    
-     printf("client: received: '%s'\n",buf);
 
     freeaddrinfo(servinfo);
 
@@ -120,15 +108,10 @@ void build_packet(struct Packet *pack, uint32_t sequence_number_in, char *messag
 }
 void build_packet_from_socket(struct Packet *pack, char *recived_data[], int data_length)
 {
-//	memcpy((void*)pack->length, recived_data, PACKET_LENGTH_SIZE);
-//	memcpy((void*)pack->timestamp, recived_data+PACKET_LENGTH_SIZE,PACKET_LENGTH_SIZE);
-//	memcpy((void*)pack->sequence_number, recived_data+PACKET_LENGTH_SIZE+PACKET_LENGTH_SIZE,PACKET_SEQUENCE_NUMBER_SIZE);
-//	memcpy((void*)pack->message, recived_data +PACKET_LENGTH_SIZE+PACKET_LENGTH_SIZE+PACKET_SEQUENCE_NUMBER_SIZE,data_length -(PACKET_LENGTH_SIZE+PACKET_TIMESTAMP_SIZE+PACKET_SEQUENCE_NUMBER_SIZE));
-}
-void build_string_from_packet(struct Packet *pack,char *buffer_out[])
-{
-	*buffer_out = (char*)malloc(pack->length+3);
-	snprintf(*buffer_out,pack->length + 3,"%u%u%llu%s",pack->length,pack->sequence_number,pack->timestamp,pack->message);	
+	memcpy((void*)pack->length, recived_data, PACKET_LENGTH_SIZE);
+	memcpy((void*)pack->timestamp, recived_data+PACKET_LENGTH_SIZE,PACKET_LENGTH_SIZE);
+	memcpy((void*)pack->sequence_number, recived_data+PACKET_LENGTH_SIZE+PACKET_LENGTH_SIZE,PACKET_SEQUENCE_NUMBER_SIZE);
+	memcpy((void*)pack->message, recived_data +PACKET_LENGTH_SIZE+PACKET_LENGTH_SIZE+PACKET_SEQUENCE_NUMBER_SIZE,data_length -(PACKET_LENGTH_SIZE+PACKET_TIMESTAMP_SIZE+PACKET_SEQUENCE_NUMBER_SIZE));
 }
 void print_packet(struct Packet *pack)
 {
