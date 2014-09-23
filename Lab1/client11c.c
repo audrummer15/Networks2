@@ -20,6 +20,7 @@
 #define PACKET_SEQUENCE_NUMBER_SIZE 4
 #define PACKET_TIMESTAMP_SIZE 8
 #define MAXDATASIZE 1038 // max number of bytes we can get at once 
+#define PACKETSSENT 100000
 
 struct Packet
 {
@@ -31,7 +32,7 @@ struct Packet
 
 void build_packet(struct Packet *pack, uint32_t sequence_number_in, char *message[]);
 void build_packet_from_socket(struct Packet *pack, char recived_data[], int data_length);
-void print_packet(struct Packet *pack);
+void print_packet(struct Packet *pack, char type[]);
 void build_string_from_packet(struct Packet *pack,char *buffer_out[]);
 
 
@@ -80,8 +81,8 @@ int main(int argc, char *argv[])
 	 	
 	 	int next_sequence_number=1, packets_recieved =0;
 	 	char buf[MAXDATASIZE];
-	 	unsinged long roundtrip_high=0, roundtrip_low=0, roundtrip_avg=0;
-	 	while (next_sequence_number <= 100000)
+	 	unsigned long roundtrip_high=0, roundtrip_low=0, roundtrip_avg=0;
+	 	while (next_sequence_number <= PACKETSSENT)
 	 	{
 	 	
 	 	    if ((numbytes = recv(sockfd, buf, MAXDATASIZE-1, 0)) == -1) {
@@ -90,21 +91,21 @@ int main(int argc, char *argv[])
 	 	    }
 	 	    
 	 	    buf[numbytes] = '\0';
-	 	    
-	 	    printf("client: received: '%s'\n",buf);
-	 	
 	 		struct Packet packet_recieved;
 	 		build_packet_from_socket(&packet_recieved,buf,numbytes);
-	 		print_packet(&packet_recieved);
-	 		
+	 		print_packet(&packet_recieved, "Recieved");
 	 		if(next_sequence_number == packet_recieved.sequence_number)
 	 		{
-		 		unsigned long roundtrip_time= (time(NULL) * 100)- packet_recieved.timestamp;
+		 		unsigned long roundtrip_time= (time(NULL) * 1000)- packet_recieved.timestamp;
+		 		if (next_sequence_number ==1)
+		 		{
+		 			roundtrip_low =roundtrip_time;
+		 		}
 		 		if (roundtrip_time > roundtrip_high)
 		 			roundtrip_high = roundtrip_time;
 		 		else if (roundtrip_time < roundtrip_low)
 		 			roundtrip_low = roundtrip_time;
-		 		rounttrip_avg += roundtrip_time;
+		 		roundtrip_avg += roundtrip_time;
 		 		
 		 		packets_recieved ++;
 		 		next_sequence_number++;
@@ -119,20 +120,22 @@ int main(int argc, char *argv[])
 		 		else
 		 		{
 		 			printf("Recieve packet with the sequence number: %d late",packet_recieved.sequence_number);
-		 			unsigned long roundtrip_time= (time(NULL) * 100)- packet_recieved.timestamp;
+		 			unsigned long roundtrip_time= (time(NULL) * 1000)- packet_recieved.timestamp;
+		 			
 		 			if (roundtrip_time > roundtrip_high)
 		 				roundtrip_high = roundtrip_time;
 		 			else if (roundtrip_time < roundtrip_low)
 		 				roundtrip_low = roundtrip_time;
-		 			rounttrip_avg += roundtrip_time;
+		 			roundtrip_avg += roundtrip_time;
 		 			packets_recieved ++;
 		 		}
 		 	}
 	 	}
 	 	//round trip times
-	 	printf("Round trip time average: %lu ms\n", (roundtriptime/packets_recieved));
-	 	printf("Round trip time max: %lu ms\n", roundtrip_hihg);
+	 	printf("Round trip time average: %lu ms\n", (roundtrip_avg/packets_recieved));
+	 	printf("Round trip time max: %lu ms\n", roundtrip_high);
 	 	printf("Round trip time min: %lu ms\n", roundtrip_low);
+	 	
  	}
  	else
  	{
@@ -140,14 +143,14 @@ int main(int argc, char *argv[])
  		int count = 1;
  		char *count_buffer;
  		count_buffer = (char *) malloc (20 + 1);
- 		while (count < 100000)
+ 		while (count <= PACKETSSENT)
  		{
 	 		struct Packet packet_sent;
 	 		sprintf(count_buffer, "%d", count);
 	 		build_packet(&packet_sent,count,&count_buffer);
-	 		print_packet(&packet_sent);
-	 		char *buffer;
-	 		build_string_from_packet(&packet_sent,&buffer);
+	 		//print_packet(&packet_sent, "Sent");
+	 		char **buffer;
+	 		build_string_from_packet(&packet_sent,buffer);
 	 		
 	 		if ((numbytes = sendto(sockfd, buffer, (packet_sent.length + 3), 0,p->ai_addr, p->ai_addrlen)) == -1) {
 	 		    perror("Parent sending error: sendto");
@@ -155,7 +158,9 @@ int main(int argc, char *argv[])
 	 		}
 	 		
  			count++;
+ 			usleep(100000);
  		}
+ 		
  	}	
 	
     freeaddrinfo(servinfo);
@@ -172,18 +177,19 @@ void build_packet(struct Packet *pack, uint32_t sequence_number_in, char *messag
 	strcpy(pack->message, *message); 
 	pack->length = strlen(*message) + PACKET_LENGTH_SIZE+PACKET_TIMESTAMP_SIZE+PACKET_SEQUENCE_NUMBER_SIZE;
 }
-void build_packet_from_socket(struct Packet *pack, char recived_data[], int data_length)
+void build_packet_from_socket(struct Packet *pack, char recieved_data[], int data_length)
 {
-
+	memset(pack,0,data_length);
+	memcpy(pack, recieved_data, data_length);
 }
 void build_string_from_packet(struct Packet *pack,char *buffer_out[])
 {
-	*buffer_out = (char*)malloc(pack->length+3);
-	snprintf(*buffer_out,pack->length + 3,"%u%u%llu%s",pack->length,pack->sequence_number,pack->timestamp,pack->message);	
+	*buffer_out = (char*) malloc(pack->length+3);
+	memcpy(buffer_out, pack, (pack->length+3));
 }
-void print_packet(struct Packet *pack)
+void print_packet(struct Packet *pack, char type[])
 {
-	printf("Packet ======= \n");
+	printf("Packet %s ======= \n",type);
 	printf("  Length: %d \n", pack->length);
 	printf("  Sequence Number: %d \n", pack->sequence_number);
 	printf("  Timestamp: %llu \n", pack->timestamp);

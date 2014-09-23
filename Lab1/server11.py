@@ -26,4 +26,4 @@ while True:
 
 			print "Data: ", thisPacket.data
 
-			sys.exit()
+			os._exit(0)
