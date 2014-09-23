@@ -1,5 +1,6 @@
 /*
-** client.c -- a stream socket client demo
+** client12.c -- a stream socket client 
+** Adam Brown, Ben Gustafson
 */
 
 #include <stdio.h>
@@ -24,7 +25,7 @@ struct Request
           char op_code;
           uint32_t a;
           uint32_t b;
-}__attribute__((__packed__));
+};
 
 struct Response
 {
@@ -33,7 +34,7 @@ struct Response
           uint32_t b;
           uint32_t answer;
           char valid;
-}__attribute__((__packed__));
+};
 
 void print_request_packet(struct Request *request_packet);
 void print_response_packet(struct Response *response_packet);
@@ -100,22 +101,15 @@ int main(int argc, char *argv[])
     request_sent.a = atoi(argv[3]);
     request_sent.b = atoi(argv[4]);
     request_sent.op_code = *argv[5];
-    /*char **send_buffer;
+    char **send_buffer;
    	send_buffer = (char**) malloc(REQUEST_SIZE);
- 	memset(send_buffer, 0, REQUEST_SIZE);
-	creat_buffer_to_send(&request_sent, send_buffer);*/
- 	print_request_packet(&request_sent);/*
+ 	creat_buffer_to_send(&request_sent, send_buffer);
+ 	print_request_packet(&request_sent);
 
-	//char* bufbuf[sizeof(request_sent)];
-	//memcpy(&bufbuf, &request_sent, sizeof(request_sent));	
+ 	
  	//printf("Buffer: %s\n", &send_buffer);
-	printf("Buffer: ");
-	int i=0;
-	for( i=0; i < REQUEST_SIZE; i++ )
-		printf("%d ", send_buffer[i]);	
-	printf("\n");*/
-
-	send(sockfd, (void*)&request_sent, REQUEST_SIZE, 0);
+ 	
+    send(sockfd,send_buffer,REQUEST_SIZE, 0);
 
     
     freeaddrinfo(servinfo); // all done with this structure
@@ -161,23 +155,13 @@ void print_response_packet(struct Response *response_packet)
 }
 void creat_buffer_to_send(struct Request *request_packet, char *buffer_out[])
 {
-	unsigned char temp[4];
-  	memcpy(&temp[0], &request_packet->a, 4);
-
-	int i=0;
-	for( i=0; i<4; i++ )
-		printf("a: %d", temp[i]);
-
-	//char* temp = (char*)request_packet->a;
-	//char* temp2 = (char*)request_packet->b;
-	memcpy(&buffer_out[0], &request_packet[0], 1);
-	memcpy(&buffer_out[1], &temp[0], 4);
-//	memcpy(&buffer_out[5], &temp2[0], 4);
+	memset(buffer_out, 0, 14);
+	memcpy(buffer_out, request_packet, REQUEST_SIZE);
 }
 void creat_repsonse_packet(struct Response *response_packet, char data_recieved[])
 {
 	memcpy(response_packet, data_recieved, RESPONSE_SIZE);
-	memcpy(&response_packet->answer, &data_recieved[9], 4);
+	memcpy(&response_packet->answer,&data_recieved[9], 4);
 	response_packet->answer = ntohl(response_packet->answer);
 	response_packet->valid = data_recieved[13];
 }

@@ -1,0 +1,13 @@
+# Adam Brown
+# Ben Gustafson
+CC=gcc
+CFLAGS=-c
+
+all: client11b.o
+
+client11b.o:  client11b.c
+	$(CC) client11b.c -o client11b.o
+
+clean:
+	rm client11b.o
+	
