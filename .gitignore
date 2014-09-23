@@ -1,0 +1,7 @@
+*.o
+*.out
+*.o
+
+Lab1/client.o
+
+Lab1/client2.o

@@ -96,7 +96,10 @@ int main(int argc, char *argv[])
 	 		print_packet(&packet_recieved, "Recieved");
 	 		if(next_sequence_number == packet_recieved.sequence_number)
 	 		{
-		 		unsigned long roundtrip_time= (time(NULL) * 1000)- packet_recieved.timestamp;
+	 			struct timeval tv;
+			    gettimeofday(&tv, NULL);
+				unsigned long roundtrip_time= ((unsigned long long)(tv.tv_sec) * 1000 + (unsigned long long)(tv.tv_usec) / 1000) - packet_recieved.timestamp;
+		 		//unsigned long roundtrip_time= (time(NULL) * 1000) - packet_recieved.timestamp; //AMB
 		 		if (next_sequence_number ==1)
 		 		{
 		 			roundtrip_low =roundtrip_time;
@@ -120,7 +123,10 @@ int main(int argc, char *argv[])
 		 		else
 		 		{
 		 			printf("Recieve packet with the sequence number: %d late",packet_recieved.sequence_number);
-		 			unsigned long roundtrip_time= (time(NULL) * 1000)- packet_recieved.timestamp;
+		 			struct timeval tv;
+    				gettimeofday(&tv, NULL);
+					unsigned long roundtrip_time= ((unsigned long long)(tv.tv_sec) * 1000 + (unsigned long long)(tv.tv_usec) / 1000) - packet_recieved.timestamp;
+		 			//unsigned long roundtrip_time= (time(NULL) * 1000)- packet_recieved.timestamp; //AMB
 		 			
 		 			if (roundtrip_time > roundtrip_high)
 		 				roundtrip_high = roundtrip_time;
@@ -150,6 +156,7 @@ int main(int argc, char *argv[])
 	 		build_packet(&packet_sent,count,&count_buffer);
 	 		//print_packet(&packet_sent, "Sent");
 	 		char **buffer;
+	 		buffer = (char**)malloc(packet_sent.length + 3);
 	 		build_string_from_packet(&packet_sent,buffer);
 	 		
 	 		if ((numbytes = sendto(sockfd, buffer, (packet_sent.length + 3), 0,p->ai_addr, p->ai_addrlen)) == -1) {
@@ -158,7 +165,7 @@ int main(int argc, char *argv[])
 	 		}
 	 		
  			count++;
- 			usleep(100000);
+ 			//usleep(10000);
  		}
  		
  	}	
@@ -172,8 +179,11 @@ int main(int argc, char *argv[])
 
 void build_packet(struct Packet *pack, uint32_t sequence_number_in, char *message[])
 {
-	pack->sequence_number = sequence_number_in;
-	pack->timestamp  = time(NULL) * 1000;
+    struct timeval tv;
+    gettimeofday(&tv, NULL);
+	
+    pack->sequence_number = sequence_number_in;
+	pack->timestamp = (unsigned long long)(tv.tv_sec) * 1000 + (unsigned long long)(tv.tv_usec) / 1000;
 	strcpy(pack->message, *message); 
 	pack->length = strlen(*message) + PACKET_LENGTH_SIZE+PACKET_TIMESTAMP_SIZE+PACKET_SEQUENCE_NUMBER_SIZE;
 }
@@ -184,7 +194,6 @@ void build_packet_from_socket(struct Packet *pack, char recieved_data[], int dat
 }
 void build_string_from_packet(struct Packet *pack,char *buffer_out[])
 {
-	*buffer_out = (char*) malloc(pack->length+3);
 	memcpy(buffer_out, pack, (pack->length+3));
 }
 void print_packet(struct Packet *pack, char type[])
