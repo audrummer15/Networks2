@@ -105,10 +105,12 @@ int main(int argc, char *argv[])
    	send_buffer = (char*) malloc(REQUEST_SIZE);
  	creat_buffer_to_send(&request_sent, &send_buffer);
  	print_request_packet(&request_sent);
+
  	
  	printf("Buffer: %s\n", &send_buffer);
  	
     send(sockfd,&send_buffer,REQUEST_SIZE, 0);
+
     
     freeaddrinfo(servinfo); // all done with this structure
     
@@ -124,6 +126,7 @@ int main(int argc, char *argv[])
     struct Response response_packet;
     creat_repsonse_packet(&response_packet, buf);
     print_response_packet(&response_packet);
+
 
     close(sockfd);
 
@@ -143,7 +146,11 @@ void print_response_packet(struct Response *response_packet)
 	printf("  A: %u \n", response_packet->a);
 	printf("  B: %u \n", response_packet->b);
 	printf("  Answer: %u \n", response_packet->answer);
-	printf("  Valid: %c \n", response_packet->valid);
+    if( (char)response_packet->valid == '1' )
+        printf("Is Valid");
+    else
+        printf("Not Valid");
+	//printf("  Valid: %c \n", response_packet->valid);
 }
 void creat_buffer_to_send(struct Request *request_packet, char *buffer_out[])
 {
