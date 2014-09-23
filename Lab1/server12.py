@@ -35,7 +35,6 @@ while 1:
 		conn.close()
 		continue
 
-
 	data = unpack('!cII', datarecv)
 
 	print 'Data: ', data
@@ -43,7 +42,7 @@ while 1:
 	# Construct a request packet for easier referencing (Adam - not sure if needed)
 	req = RequestPacket(data[0], data[1], data[2])
 	ansIsValid = '1'
-
+	req.operator == '+'
 	if req.operator == '+':
 		result = int(req.operand1) + int(req.operand2)
 	elif req.operator == '-':
@@ -61,8 +60,9 @@ while 1:
 		ansIsValid = '0'
 
 	# Pack the data back in and send it back to the origin
-	resp = pack('cIIIc', req.operator, req.operand1, req.operand2, result, ansIsValid)
-	print "Length: ", len(resp)
+
+	resp = pack('!cIIIc', req.operator, req.operand1, req.operand2, result, ansIsValid)
+	
 	conn.send(resp)
 
 	conn.close()

@@ -100,16 +100,15 @@ int main(int argc, char *argv[])
     request_sent.a = atoi(argv[3]);
     request_sent.b = atoi(argv[4]);
     request_sent.op_code = *argv[5];
-    
-    char *send_buffer;
-   	send_buffer = (char*) malloc(REQUEST_SIZE);
- 	creat_buffer_to_send(&request_sent, &send_buffer);
+    char **send_buffer;
+   	send_buffer = (char**) malloc(REQUEST_SIZE);
+ 	creat_buffer_to_send(&request_sent, send_buffer);
  	print_request_packet(&request_sent);
 
  	
- 	printf("Buffer: %s\n", &send_buffer);
+ 	//printf("Buffer: %s\n", &send_buffer);
  	
-    send(sockfd,&send_buffer,REQUEST_SIZE, 0);
+    send(sockfd,send_buffer,REQUEST_SIZE, 0);
 
     
     freeaddrinfo(servinfo); // all done with this structure
@@ -120,7 +119,7 @@ int main(int argc, char *argv[])
         exit(1);
     }
 
-    buf[numbytes] = '\0';
+    //buf[numbytes] = '\0';
 
 	
     struct Response response_packet;
@@ -146,20 +145,24 @@ void print_response_packet(struct Response *response_packet)
 	printf("  A: %u \n", response_packet->a);
 	printf("  B: %u \n", response_packet->b);
 	printf("  Answer: %u \n", response_packet->answer);
-    if( (char)response_packet->valid == '1' )
+	
+   /* if( (char)response_packet->valid == '1' )
         printf("Is Valid");
     else
-        printf("Not Valid");
-	//printf("  Valid: %c \n", response_packet->valid);
+        printf("Not Valid"); */
+	printf("  Valid: %c \n", response_packet->valid);
+	
 }
 void creat_buffer_to_send(struct Request *request_packet, char *buffer_out[])
 {
-	memset(buffer_out,0,REQUEST_SIZE);
 	memcpy(buffer_out, request_packet, REQUEST_SIZE);
 }
 void creat_repsonse_packet(struct Response *response_packet, char data_recieved[])
 {
 	memcpy(response_packet, data_recieved, RESPONSE_SIZE);
+	memcpy(&response_packet->answer,&data_recieved[9], 4);
+	response_packet->answer = ntohl(response_packet->answer);
+	response_packet->valid = data_recieved[13];
 }
 
 
