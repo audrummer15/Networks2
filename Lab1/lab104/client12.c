@@ -1,5 +1,5 @@
 /*
-** client.c -- a stream socket client demo
+** client12.c -- Adam Brown and Ben Gustafson
 */
 
 #include <stdio.h>
