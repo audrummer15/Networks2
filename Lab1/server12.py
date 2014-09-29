@@ -35,14 +35,18 @@ while 1:
 		conn.close()
 		continue
 
+	print "Length: ", len(datarecv)	
+	print repr(datarecv)
 	data = unpack('!cII', datarecv)
 
-	print 'Data: ', data
+	print 'Data: ', data, socket.ntohl(data[1])
 
 	# Construct a request packet for easier referencing (Adam - not sure if needed)
-	req = RequestPacket(data[0], data[1], data[2])
+	req = RequestPacket(data[0], socket.ntohl(data[1]), socket.ntohl(data[2]))
 	ansIsValid = '1'
-	req.operator == '+'
+
+	print "A: ", req.operand1
+	print "B: ", req.operand2	
 	if req.operator == '+':
 		result = int(req.operand1) + int(req.operand2)
 	elif req.operator == '-':
@@ -61,7 +65,8 @@ while 1:
 
 	# Pack the data back in and send it back to the origin
 
-	resp = pack('!cIIIc', req.operator, req.operand1, req.operand2, result, ansIsValid)
+	print "Result: ", result
+	resp = pack('!cIIIc', req.operator, socket.htonl(req.operand1), socket.htonl(req.operand2), result, ansIsValid)
 	
 	conn.send(resp)
 
