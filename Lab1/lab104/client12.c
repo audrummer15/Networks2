@@ -152,13 +152,12 @@ void print_response_packet(struct Response *response_packet)
 	printf("  A: %u \n", response_packet->a);
 	printf("  B: %u \n", response_packet->b);
 	printf("  Answer: %u \n", response_packet->answer);
+	printf("  Valid: %c \n", response_packet->valid);
 	
    /* if( (char)response_packet->valid == '1' )
         printf("Is Valid");
     else
         printf("Not Valid"); */
-	printf("  Valid: %c \n", response_packet->valid);
-	
 }
 void creat_buffer_to_send(struct Request *request_packet, char *buffer_out[])
 {
