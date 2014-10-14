@@ -27,3 +27,4 @@ while True:
     print "Sender IP", data[3]
     print "Sender Port", data[1]
     print "Message: ", data[4]
+    print " "
