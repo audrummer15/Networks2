@@ -23,7 +23,7 @@ while True:
   data, address = s.recvfrom(1012) #block until data received (1012 max bytes)
 
   if data:
-    data = unpack('!hh4s4s1000s', data)
+    data = unpack('!hhII1000s', data)
     print "Sender IP", data[3]
     print "Sender Port", data[1]
     print "Message: ", data[4]

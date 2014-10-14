@@ -3,7 +3,7 @@
 #UDP Sender to forwarder
 #Takes Client, Forwarder, and sender info on commmand line and sends the message given to forwarder
 
-import socket
+import socket, struct
 import sys
 import os
 from struct import *
@@ -14,7 +14,7 @@ def send_message(sock, message, message_length, forward_ip, forward_port, client
 		#make message
 		print "making"
 		print forward_ip, " ", forward_port, " ", client_ip, " ", client_port, " ", source_ip, " ", message
-		message_to_send = pack('!hh4s4s1000s', client_port, listening_port, client_ip, source_ip, message)
+		message_to_send = pack('!hhII1000s', client_port, listening_port,struct.unpack("!L", socket.inet_aton(client_ip))[0], struct.unpack("!L", socket.inet_aton(source_ip))[0], message)
 
 		# Send data
 		print 'Sending: ', message
