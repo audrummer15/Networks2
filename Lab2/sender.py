@@ -12,16 +12,16 @@ from struct import *
 def send_message(sock, message, message_length, forward_ip, forward_port, client_ip, client_port, listening_port, source_ip):
 	try:
 		#make message
-		#print forward_ip, " ", forward_port, " ", client_ip, " ", client_port, " ", source_ip, " ", message
-		message_to_send = pack('!hhII1000s', client_port, listening_port,struct.unpack("!I", socket.inet_aton(client_ip))[0], struct.unpack("!I", socket.inet_aton(source_ip))[0], message)
+		print forward_ip, " ", forward_port, " ", client_ip, " ", client_port, " ", source_ip, " ", message
+		message_to_send = pack('!HHII1000s', client_port, listening_port, struct.unpack("!I", socket.inet_aton(client_ip))[0], struct.unpack("!I", socket.inet_aton(source_ip))[0], message)
 
 		# Send data
 		print 'Sending: ', message
 		#print "Full message: ", message_to_send
 		#Forwarder:
-		#server_address = (forward_ip,forward_port)
+		server_address = (forward_ip, forward_port)
 		#Send to Client:
-		server_address = (client_ip,client_port)
+		#server_address = (client_ip,client_port)
 		sent = sock.sendto(message_to_send, server_address)
 
 		return True
