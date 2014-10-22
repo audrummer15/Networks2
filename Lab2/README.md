@@ -18,14 +18,14 @@ We have a sender (python), forwarder (C), receiver (python).
 
 The beginning of each packet is formated as below:
 
-<---- 16 bits ----> < ---- 16 bits ---->
-|---------------------------------------|
-|   Target Port #  |   Source Port #    |
-|---------------------------------------|
-|						Target IP Address						|
-|---------------------------------------|
-|						Source IP Address           |
-|---------------------------------------|
+	<---- 16 bits ----> < ---- 16 bits ---->
+	|---------------------------------------|
+	|   Target Port #  |   Source Port #    |
+	|---------------------------------------|
+	|           Target IP Address           |
+	|---------------------------------------|
+	|           Source IP Address           |
+	|---------------------------------------|
 
 The message follows, with a maximum of 1kb.
 
