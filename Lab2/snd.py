@@ -32,7 +32,7 @@ def send_message(sock, message, message_length, forward_ip, forward_port, client
 
 #Check command line arguments
 if len(sys.argv) != 6:
-	print 'send.py [Forwarder Name] [Forwarder Port # (1010+GID) ] [Client Name] [Client Port # (10150+GID)] [Source IP]'
+	print 'send.py [Forwarder Name] [Forwarder Port # (10010+GID) ] [Client Name] [Client Port # (10150+GID)] [Source IP]'
 	sys.exit(2)
 
 forward_name = sys.argv[1]

@@ -2,7 +2,7 @@
 #10/13/14
 #Receiver from forwarder
 # Takes the paket from forwarder and prints out the contens
-import socket
+import socket, struct
 import sys
 import os
 from struct import *
@@ -24,7 +24,9 @@ while True:
 
   if data:
     data = unpack('!hhII1000s', data)
-    print "Sender IP", data[3]
-    print "Sender Port", data[1]
+    print "Forwarder IP: ", address[0]
+    print "Sender IP: ", socket.inet_ntoa(struct.pack("!I", data[3]))
     print "Message: ", data[4]
     print " "
+
+    forwarder_info = pack('!IH1000s', data[3], data[1], data[4])

@@ -15,9 +15,9 @@ LAB 2:
 
 ##Run Sender:
 
-	$ python sender.py [Forwarder IP] [Forwarder Port # (10100+GID) ] [Client IP] [Client Port # (10150+GID)] [Source IP]
+	$ python snd.py [Forwarder IP] [Forwarder Port # (10010+GID) ] [Client IP] [Client Port # (10150+GID)] [Source IP]
 
-	$ python sender.py 127.0.0.1 10054 127.0.0.1 10154 127.0.0.1
+	$ python snd.py 127.0.0.1 10014 127.0.0.1 10154 127.0.0.1
 
 Enter you message.
 
@@ -26,15 +26,31 @@ After you are done just type 'exit' in the "Enter your message:" and the program
 
 ##Run Forwarder
 
+First we have to compile fwd.c
+
+	gcc fwd.c -o fwd.o
+
+Then run fwd.o
+
+	./fwd.o [Listenting port number]
+	./fwd.o 10014
+
+The packet being forwarded will be printed out and forwarded to the correct destination.
+
 ##Run Receiver
 
 Type:
 
-	$ python receiver.py [Listening Port # (10150+GID)]
-	$ python receiver.py 10154
+	$ python rec.py [Listening Port # (10150+GID)]
+	$ python rec.py 10154
 
 Report:
 -------------
+
+We had an interesting time with decoding the bytes in C.
+Some of the bytes were being automatically upgraded to integers causing the IP addressed to be incorrect.
+A cast to (unsigned) (unsigned char) fixed the issue.
+
 
 
 
