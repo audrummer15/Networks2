@@ -1,4 +1,4 @@
-#Ben Gustafson
+#Group 4
 #10/13/14
 #Receiver from forwarder
 # Takes the paket from forwarder and prints out the contens

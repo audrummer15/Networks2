@@ -1,4 +1,4 @@
-#Ben Gustafson
+#Group 4
 #10/13/14
 #UDP Sender to forwarder
 #Takes Client, Forwarder, and sender info on commmand line and sends the message given to forwarder
