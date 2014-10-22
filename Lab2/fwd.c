@@ -72,13 +72,13 @@ int main(int argc, char *argv[])
     for(p = servinfo; p != NULL; p = p->ai_next) {
         if ((sockfd = socket(p->ai_family, p->ai_socktype,
                 p->ai_protocol)) == -1) {
-            perror("listener: socket");
+            perror("Forwarder: socket");
             continue;
         }
 
         if (bind(sockfd, p->ai_addr, p->ai_addrlen) == -1) {
             close(sockfd);
-            perror("listener: bind");
+            perror("Forwarder: bind");
             continue;
         }
 
@@ -86,13 +86,13 @@ int main(int argc, char *argv[])
     }
 
     if (p == NULL) {
-        fprintf(stderr, "listener: failed to bind socket\n");
+        fprintf(stderr, "Forwarder: failed to bind socket\n");
         return 2;
     }
 
     freeaddrinfo(servinfo);
 
-    printf("listener: waiting to recvfrom...\n");
+    printf("Forwarder: waiting to receive...\n");
 	
 	addr_len = sizeof their_addr;
 
@@ -132,10 +132,12 @@ char *getAddressFromM(char* message, enum IPSelector IPAddressSelector) {
 	else if( IPAddressSelector == SOURCE_IP)
 		iOffset = 8;
 
+    //For each octet we want to get
     for( i=0; i <= 3; i++ ) {    
     	memset(ipFragment, 0, sizeof(char) * 3);	
-    	sprintf(ipFragment, "%d", message[4 + i]);
+    	sprintf(ipFragment, "%d", (unsigned)(unsigned char)message[4 + i]);
     	
+        //Add the octet to the selectedHostname string
     	int j;
     	for( j=0; j<3; j++) {
 	    	if( ipFragment[j] != '\0' ) {
@@ -143,6 +145,7 @@ char *getAddressFromM(char* message, enum IPSelector IPAddressSelector) {
 	    	}
 	    }
 
+        //Include the dot between octets in the string
 	    if( i<3 ) selectedHostname[k++] = '.';
 
     }
