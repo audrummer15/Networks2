@@ -8,12 +8,33 @@ Networks2
 Overview:
 -------------
 
-We have a sender (python), forwarder (C), receiver (python).
+The goal is to send a packet through a forwarder to the actual destination.
+
 
 LAB 2:
 -------------
 
+We have a sender (python), forwarder (C), receiver (python).
+
+The beginning of each packet is formated as below:
+
+<---- 16 bits ----> < ---- 16 bits ---->
+|---------------------------------------|
+|   Target Port #  |   Source Port #    |
+|---------------------------------------|
+|						Target IP Address						|
+|---------------------------------------|
+|						Source IP Address           |
+|---------------------------------------|
+
+The message follows, with a maximum of 1kb.
+
+
 ##Run Sender:
+
+We have to enter in the information for the forwarder and client inorder for the packet to end up in the right place.
+
+Type:
 
 	$ python snd.py [Forwarder IP] [Forwarder Port # (10010+GID) ] [Client IP] [Client Port # (10150+GID)] [Source IP]
 
@@ -28,12 +49,12 @@ After you are done just type 'exit' in the "Enter your message:" and the program
 
 First we have to compile fwd.c
 
-	gcc fwd.c -o fwd.o
+	 $ gcc fwd.c -o fwd.o
 
 Then run fwd.o
 
-	./fwd.o [Listenting port number]
-	./fwd.o 10014
+	$ ./fwd.o [Listenting port number]
+	$ ./fwd.o 10014
 
 The packet being forwarded will be printed out and forwarded to the correct destination.
 
