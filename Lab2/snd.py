@@ -13,7 +13,7 @@ def send_message(sock, message, message_length, forward_ip, forward_port, client
 	try:
 		#make message
 		print forward_ip, " ", forward_port, " ", client_ip, " ", client_port, " ", source_ip, " ", message
-		message_to_send = pack('!HHII1000s', client_port, listening_port, struct.unpack("!I", socket.inet_aton(client_ip))[0], struct.unpack("!I", socket.inet_aton(source_ip))[0], message)
+		message_to_send = pack('!HHII1024s', client_port, listening_port, struct.unpack("!I", socket.inet_aton(client_ip))[0], struct.unpack("!I", socket.inet_aton(source_ip))[0], message)
 
 		# Send data
 		print 'Sending: ', message
@@ -32,7 +32,7 @@ def send_message(sock, message, message_length, forward_ip, forward_port, client
 
 #Check command line arguments
 if len(sys.argv) != 6:
-	print 'send.py [Forwarder Name] [Forwarder Port # (1010+GID) ] [Client Name] [Client Port # (10150+GID)] [Source IP]'
+	print 'send.py [Forwarder Name] [Forwarder Port # (10100+GID) ] [Client Name] [Client Port # (10150+GID)] [Source IP]'
 	sys.exit(2)
 
 forward_name = sys.argv[1]

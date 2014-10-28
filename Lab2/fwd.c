@@ -11,7 +11,7 @@
 #include <arpa/inet.h>
 #include <netdb.h>
 
-#define MAXBUFLEN 1038
+#define MAXBUFLEN 1036
 
 /*********************************************
     1. Take a port number Fx as argument
@@ -97,7 +97,7 @@ int main(int argc, char *argv[])
 	addr_len = sizeof their_addr;
 
     while(1) {
-	    if ((numbytes = recvfrom(sockfd, buf, MAXBUFLEN-1 , 0, (struct sockaddr *)&their_addr, &addr_len)) == -1) {
+	    if ((numbytes = recvfrom(sockfd, buf, MAXBUFLEN, 0, (struct sockaddr *)&their_addr, &addr_len)) == -1) {
 	        perror("recvfrom");
 	        exit(1);
 	    }
