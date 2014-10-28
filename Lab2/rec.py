@@ -29,3 +29,5 @@ while True:
     print "Sender IP: ", socket.inet_ntoa(struct.pack("!I", data[3]))
     print "Message: ", data[4]
     print " "
+
+    forwarder_info = pack('!IH1000s', data[3], data[1], data[4])
