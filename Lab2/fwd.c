@@ -38,8 +38,8 @@ enum PortSelector {
 };
 
 void *get_in_addr(struct sockaddr *sa);
-char *getAddressFromM(char* message, enum IPSelector IPAddressSelector);
-char *getPortFromM(char* message, enum PortSelector PortNumberSelector);
+void getAddressFromM(char* resultAddress, char* message, enum IPSelector IPAddressSelector);
+void getPortFromM(char* resultPort, char* message, enum PortSelector PortNumberSelector);
 void forwardMessage(char* message, int messageLength);
 
 int main(int argc, char *argv[])
@@ -102,7 +102,7 @@ int main(int argc, char *argv[])
 	        exit(1);
 	    }
 
-	    printf( "Forwarding to: %s:%s\n", getAddressFromM(buf, TARGET_IP), getPortFromM(buf, TARGET_PORT) );
+	    printf( "Forwarding payload...\n"); 
 
 	    forwardMessage(buf, numbytes);
 	}
@@ -122,9 +122,8 @@ void *get_in_addr(struct sockaddr *sa)
     return &(((struct sockaddr_in6*)sa)->sin6_addr);
 }
 
-char *getAddressFromM(char* message, enum IPSelector IPAddressSelector) {
+void getAddressFromM(char* resultAddress, char* message, enum IPSelector IPAddressSelector) {
 	int i=0, k=0, iOffset = 0;
-    char *selectedHostname = (char*)malloc( sizeof(char) * 15 );
 	char *ipFragment = (char*) malloc( sizeof(char) * 3 );
 
 	if( IPAddressSelector == TARGET_IP )
@@ -141,24 +140,23 @@ char *getAddressFromM(char* message, enum IPSelector IPAddressSelector) {
     	int j;
     	for( j=0; j<3; j++) {
 	    	if( ipFragment[j] != '\0' ) {
-	    		selectedHostname[k++] = ipFragment[j];
+	    		resultAddress[k++] = ipFragment[j];
 	    	}
 	    }
 
         //Include the dot between octets in the string
-	    if( i<3 ) selectedHostname[k++] = '.';
+	    if( i<3 ) resultAddress[k++] = '.';
 
     }
 
     free(ipFragment);
 
-    return selectedHostname;
+    return;
 }
 
-char *getPortFromM(char* message, enum PortSelector PortNumberSelector) {
+void getPortFromM(char* resultPort, char* message, enum PortSelector PortNumberSelector) {
 	int i=0, k=0, iOffset = 0;
 	int selectedPort = 0;
-	char *cSelectedPort = (char*)malloc(sizeof(char) * 5);
 
 	if( PortNumberSelector == TARGET_PORT )
 		iOffset = 0;
@@ -167,9 +165,9 @@ char *getPortFromM(char* message, enum PortSelector PortNumberSelector) {
 
 	memcpy(&selectedPort, &message[iOffset], sizeof(int));
 	
-	sprintf(cSelectedPort, "%d", ntohs(selectedPort));
+	sprintf(resultPort, "%d", ntohs(selectedPort));
 
-    return cSelectedPort;
+    return;
 }
 
 void forwardMessage(char* message, int messageLength) {
@@ -180,8 +178,14 @@ void forwardMessage(char* message, int messageLength) {
 	hintsClient.ai_protocol=0;
 	hintsClient.ai_flags=AI_ADDRCONFIG;
 	struct addrinfo* res=0;
-	
-	int err=getaddrinfo( getAddressFromM(message, TARGET_IP), getPortFromM(message, TARGET_PORT), &hintsClient, &res );
+
+    char* targetHostname = (char*)malloc( sizeof(char) * 15 );
+    char* targetPort = (char*)malloc(sizeof(char) * 5);
+
+	getAddressFromM(targetHostname, message, TARGET_IP);
+    getPortFromM(targetPort, message, TARGET_PORT);
+
+	int err=getaddrinfo( targetHostname, targetPort, &hintsClient, &res );
 	if (err!=0) {
 	    perror("failed to resolve remote socket address");
 	}
@@ -196,6 +200,9 @@ void forwardMessage(char* message, int messageLength) {
 	}
 
 	close(fd);
+
+    free(targetHostname);
+    free(targetPort);
 
 	return;
 }
