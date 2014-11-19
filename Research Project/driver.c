@@ -62,7 +62,7 @@ void main (int argc, char **argv){
           for( i=0; i<NB_SIMULATIONS; i++ ) {
 
             //Reno Run
-            sprintf(ns_command,"ns exp.tcl %ld %d %d %d TCP/Reno %d\n",
+            sprintf(ns_command,"ns reno.tcl %ld %d %d %d %d\n",
                     bandwidthValue, propagationValue, delayValue, nodeValue, 
                     rand() % (12*propagationValue));
             system(ns_command);
@@ -80,23 +80,23 @@ void main (int argc, char **argv){
             }
 
             // High Speed Run
-            /*sprintf(ns_command,"ns exp.tcl %ld %d %d %d TCP/highspeed %d\n",
+            sprintf(ns_command,"ns hstcp.tcl %ld %d %d %d %d\n",
                     bandwidthValue, propagationValue, delayValue, nodeValue, 
                     rand() % (12*propagationValue));
             system(ns_command);
 
-            fpthgpt = fopen("thgt.tr","r");
+            fpthgpt = fopen("hsthgt.tr","r");
 
             if (!fpthgpt)
-              error("cannot open thgpt\n");
+              error("cannot open hsthgpt\n");
             
-            int j=0;
+            j=0;
             while( fscanf(fpthgpt, "%lf", &thgpt[j]) == 1 ) {
               sumThgpt[j] += thgpt[j];
               printf("thgt%d = %6.2lf ", j, thgpt[j]);
               j++;
             }
-          }*/
+          }
 
           printf("\n\n >>>> Averages <<<<\n");
           for( i=0; i < nodeValue; i++ ) {
