@@ -26,7 +26,7 @@ proc finish {} {
       close $tf
 
   #Execute nam on the trace file
-        # exec nam out.nam &
+        #exec nam out.nam &
         exit 0
 }
 
