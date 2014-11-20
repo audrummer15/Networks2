@@ -8,6 +8,8 @@
 #define NB_PROPOGATION_TIMES 4
 #define NB_NODE_VALUES 4
 
+#define PROPAGATION_DEVIATION 12
+
 void error(char *str);
 
 void main (int argc, char **argv){
@@ -18,7 +20,7 @@ void main (int argc, char **argv){
   double *hsSumThgpt;
   
   long   BandwidthValues[NB_BANDWIDTH_VALUES] = 
-  {1024, 57344, 131072, 262144, 524288, 1048576, 10485760, 104857600}; /*in bps*/
+  {1, 56, 128, 256, 512, 1024, 10240, 102400}; /*in bps*/
 //{1kbps, 56kbps, 128kbps, 256kbps, 512kbps, 1Mbps, 10Mbps, 100Mbps};
 
   int   PropagationTimes[NB_PROPOGATION_TIMES] = 
@@ -64,7 +66,8 @@ void main (int argc, char **argv){
             //Reno Run
             sprintf(ns_command,"ns reno.tcl %ld %d %d %d %d\n",
                     bandwidthValue, propagationValue, delayValue, nodeValue, 
-                    rand() % (12*propagationValue));
+                    rand() % (PROPAGATION_DEVIATION*propagationValue));
+            printf("%s", ns_command);
             system(ns_command);
 
             fpthgpt = fopen("thgt.tr","r");
@@ -82,7 +85,8 @@ void main (int argc, char **argv){
             // High Speed Run
             sprintf(ns_command,"ns hstcp.tcl %ld %d %d %d %d\n",
                     bandwidthValue, propagationValue, delayValue, nodeValue, 
-                    rand() % (12*propagationValue));
+                    rand() % (PROPAGATION_DEVIATION*propagationValue));
+            printf("%s", ns_command);
             system(ns_command);
 
             fpthgpt = fopen("hsthgt.tr","r");
@@ -91,9 +95,9 @@ void main (int argc, char **argv){
               error("cannot open hsthgpt\n");
             
             j=0;
-            while( fscanf(fpthgpt, "%lf", &thgpt[j]) == 1 ) {
-              sumThgpt[j] += thgpt[j];
-              printf("thgt%d = %6.2lf ", j, thgpt[j]);
+            while( fscanf(fpthgpt, "%lf", &hsThgpt[j]) == 1 ) {
+              hsSumThgpt[j] += hsThgpt[j];
+              printf("thgt%d = %6.2lf ", j, hsThgpt[j]);
               j++;
             }
           }
@@ -101,6 +105,7 @@ void main (int argc, char **argv){
           printf("\n\n >>>> Averages <<<<\n");
           for( i=0; i < nodeValue; i++ ) {
             printf("Avg Thgt%d = %6.2lf (Kbps)\n", i, sumThgpt[i] / 1000.0 / NB_SIMULATIONS);
+            printf("HS Avg Thgt%d = %6.2lf (Kbps)\n", i, hsSumThgpt[i] / 1000.0 / NB_SIMULATIONS);
           }
 
           free(thgpt);

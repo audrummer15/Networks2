@@ -15,7 +15,13 @@ proc finish {} {
 
       for {set i 1} {$i <= $N} {incr i} {
         set thgpt($i) [$hstcp($i) set ack_]
-        set thgpt($i) [expr $thgpt($i) * 1000.0 * 8.0 / ($time - ($i * $StartTimeInterval)) ]
+        
+        if { $thgpt($i) > 0  } {
+          set thgpt($i) [expr $thgpt($i) * 1000.0 * 8.0 / ($time - ($StartTimeInterval / $N * $i)) ]
+        } else {
+          set thgpt($i) 0.0
+        }
+
         set thgptResult [concat $thgptResult $thgpt($i)]
       }
 
@@ -49,6 +55,7 @@ set Tp [lindex $argv  1]
 append Tp ms
 
 set D  [lindex $argv  2]
+set D [expr $D / 1000.0]
 
 set N  [lindex $argv  3]
 
@@ -107,7 +114,7 @@ for {set i 1} {$i <= $N} {incr i} {
 # ------- FTP Traffic ------- #
 for {set i 1} {$i <= $N} {incr i} {
     set ftp($i) [$hstcp($i) attach-app FTP]
-    $ns at [expr $i * $StartTimeInterval] "$ftp($i) start"
+    $ns at [expr $StartTimeInterval / $N * $i] "$ftp($i) start"
 }
 
 #Call the finish procedure after 5 seconds simulation time
