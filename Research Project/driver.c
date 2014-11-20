@@ -36,6 +36,8 @@ void main (int argc, char **argv){
   int i;
   char ns_command[512];
 
+  srand(time(NULL));
+
   for(BANDWIDTH_COUNTER = 0; BANDWIDTH_COUNTER < NB_BANDWIDTH_VALUES; BANDWIDTH_COUNTER++ ) {
     long bandwidthValue = BandwidthValues[BANDWIDTH_COUNTER]; // for readability
 
@@ -63,10 +65,10 @@ void main (int argc, char **argv){
           printf("\n\n >>>> Experiment %d <<<<\n", ++EXPERIMENT_COUNTER);
           for( i=0; i<NB_SIMULATIONS; i++ ) {
 
+            int randValue = rand() % (PROPAGATION_DEVIATION * propagationValue);
             //Reno Run
             sprintf(ns_command,"ns reno.tcl %ld %d %d %d %d\n",
-                    bandwidthValue, propagationValue, delayValue, nodeValue, 
-                    rand() % (PROPAGATION_DEVIATION*propagationValue));
+                    bandwidthValue, propagationValue, delayValue, nodeValue, randValue);
             printf("%s", ns_command);
             system(ns_command);
 
@@ -84,8 +86,7 @@ void main (int argc, char **argv){
 
             // High Speed Run
             sprintf(ns_command,"ns hstcp.tcl %ld %d %d %d %d\n",
-                    bandwidthValue, propagationValue, delayValue, nodeValue, 
-                    rand() % (PROPAGATION_DEVIATION*propagationValue));
+                    bandwidthValue, propagationValue, delayValue, nodeValue, randValue);
             printf("%s", ns_command);
             system(ns_command);
 
