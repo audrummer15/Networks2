@@ -13,11 +13,14 @@
 void error(char *str);
 
 void main (int argc, char **argv){
-  FILE *fpthgpt;
+  FILE *fpthgpt, *output;
   double *thgpt;
   double *sumThgpt;
   double *hsThgpt;
   double *hsSumThgpt;
+  double *sumFairnessReno;
+  double *sumFairnessHighSpeed;
+
   
   long   BandwidthValues[NB_BANDWIDTH_VALUES] = 
   {1, 56, 128, 256, 512, 1024, 10240, 102400}; /*in bps*/
@@ -34,6 +37,7 @@ void main (int argc, char **argv){
 
   int BANDWIDTH_COUNTER, PROPOGATION_COUNTER, DELAY_COUNTER, NODE_COUNTER, EXPERIMENT_COUNTER=0;
   int i;
+  double renoFairness_bottom =0, highSpeedFairness_bottom =0, renoSum=0, highSpeedSum =0;
   char ns_command[512];
 
   srand(time(NULL));
@@ -54,12 +58,16 @@ void main (int argc, char **argv){
           sumThgpt = (double*)malloc( sizeof(double) * nodeValue);
           hsThgpt = (double*)malloc( sizeof(double) * nodeValue);
           hsSumThgpt = (double*)malloc( sizeof(double) * nodeValue);
+          sumFairnessReno = (double*)malloc( sizeof(double) * nodeValue);
+          sumFairnessHighSpeed = (double*)malloc( sizeof(double) * nodeValue);
 
           for( i=0; i < nodeValue; i++ ) {
             thgpt[i] = 0;
             sumThgpt[i] = 0;
             hsThgpt[i] = 0;
             hsSumThgpt[i] = 0;
+            sumFairnessReno[i] = 0;
+            sumFairnessHighSpeed[i] =0;
           }
 
           printf("\n\n >>>> Experiment %d <<<<\n", ++EXPERIMENT_COUNTER);
@@ -80,9 +88,14 @@ void main (int argc, char **argv){
             int j=0;
             while( fscanf(fpthgpt, "%lf", &thgpt[j]) == 1 ) {
               sumThgpt[j] += thgpt[j];
+              sumFairnessReno[j] += (thgpt[j]/ 1000.0 / NB_SIMULATIONS)*(thgpt[j]/ 1000.0 / NB_SIMULATIONS);
               printf("thgt%d = %6.2lf ", j, thgpt[j]);
               j++;
             }
+            
+	    fclose(fpthgpt);
+
+            printf("\n");
 
             // High Speed Run
             sprintf(ns_command,"ns hstcp.tcl %ld %d %d %d %d\n",
@@ -98,24 +111,61 @@ void main (int argc, char **argv){
             j=0;
             while( fscanf(fpthgpt, "%lf", &hsThgpt[j]) == 1 ) {
               hsSumThgpt[j] += hsThgpt[j];
+              sumFairnessHighSpeed[j] += (hsThgpt[j]/ 1000.0 / NB_SIMULATIONS)*(hsThgpt[j]/ 1000.0 / NB_SIMULATIONS);
               printf("thgt%d = %6.2lf ", j, hsThgpt[j]);
               j++;
             }
-          }
 
+	    fclose(fpthgpt);		
+          }
+	
           printf("\n\n >>>> Averages <<<<\n");
           for( i=0; i < nodeValue; i++ ) {
             printf("Avg Thgt%d = %6.2lf (Kbps)\n", i, sumThgpt[i] / 1000.0 / NB_SIMULATIONS);
             printf("HS Avg Thgt%d = %6.2lf (Kbps)\n", i, hsSumThgpt[i] / 1000.0 / NB_SIMULATIONS);
           }
 
+	  //calculates sum
+          for( i=0; i < nodeValue; i++ ) {
+            renoSum += sumThgpt[i] / 1000.0 / NB_SIMULATIONS;
+            highSpeedSum += hsSumThgpt[i] / 1000.0 / NB_SIMULATIONS;
+            renoFairness_bottom += sumFairnessReno[i];
+            highSpeedFairness_bottom += sumFairnessHighSpeed[i];
+          }
+	
+	  //output info
+	  //printf("Fairness Sum: \n Reno: %6.2lf  HS: %6.2lf  \n Fariness Top:  \n Reno: %6.2lf   HS: %6.2lf \n Fairness Bottom \n Reno: %6.2lf  HS: %6.2lf",renoSum, highSpeedSum, renoSum * renoSum, highSpeedSum * highSpeedSum,  nodeValue * renoFairness_bottom, nodeValue* highSpeedFairness_bottom);
+
+	  printf("\n\n >>>>> Overall Stats <<<<< \n");
+	  printf("Average Throughput Reno: %6.2lf \n", renoSum);
+          printf("Average Throughput High Speed: %6.2lf \n", highSpeedSum);
+          printf("Fairness Reno: %6.2lf \n", (renoSum * renoSum) / (nodeValue * (renoSum * renoSum)) );
+          printf("Fairness High Speed: %6.2lf \n", (highSpeedSum * highSpeedSum) / (nodeValue * (highSpeedSum * highSpeedSum)));
+          
+	  // Write to the output file
+
+       	  output = fopen("output.txt","a+");
+
+  	  if (!output)
+    	    error("Error Opening output file 'output.txt'\n");
+
+	  fprintf(output,"%d, %ld, %d, %d, %d,%6.2lf,%6.2lf,%6.2lf,%6.2lf, \n", EXPERIMENT_COUNTER, bandwidthValue, propagationValue, delayValue, nodeValue, renoSum, highSpeedSum, (renoSum * renoSum) / (nodeValue * (renoSum * renoSum)) , (highSpeedSum * highSpeedSum) / (nodeValue * (highSpeedSum * highSpeedSum)) );
+ 	  
+
+	  fclose(output);
           free(thgpt);
           free(sumThgpt);
+          free(hsThgpt);
+	  free(hsSumThgpt);
+	  free(sumFairnessReno);
+	  free(sumFairnessHighSpeed);
         }
       }
     }
   }
 }
+
+
 
 
 void error(char *str){
