@@ -37,7 +37,6 @@ void main (int argc, char **argv){
 
   int BANDWIDTH_COUNTER, PROPOGATION_COUNTER, DELAY_COUNTER, NODE_COUNTER, EXPERIMENT_COUNTER=0;
   int i;
-  double renoFairness_bottom =0, highSpeedFairness_bottom =0, renoSum=0, highSpeedSum =0;
   char ns_command[512];
 
   srand(time(NULL));
@@ -53,6 +52,7 @@ void main (int argc, char **argv){
 
         for( NODE_COUNTER = 0; NODE_COUNTER < NB_NODE_VALUES; NODE_COUNTER++ ) {
           int nodeValue = NodeValues[NODE_COUNTER];
+	  double renoFairness_bottom =0, highSpeedFairness_bottom =0, renoSum=0, highSpeedSum =0, renoAverage =0, highSpeedAverage =0;
 
           thgpt = (double*)malloc( sizeof(double) * nodeValue);
           sumThgpt = (double*)malloc( sizeof(double) * nodeValue);
@@ -72,7 +72,7 @@ void main (int argc, char **argv){
 
           printf("\n\n >>>> Experiment %d <<<<\n", ++EXPERIMENT_COUNTER);
           for( i=0; i<NB_SIMULATIONS; i++ ) {
-
+	    printf("--Sim:%d --\n",i);
             int randValue = rand() % (PROPAGATION_DEVIATION * propagationValue);
             //Reno Run
             sprintf(ns_command,"ns reno.tcl %ld %d %d %d %d\n",
@@ -85,17 +85,17 @@ void main (int argc, char **argv){
             if (!fpthgpt)
               error("cannot open thgpt\n");
             
+	    printf("Node throughput: [");
             int j=0;
             while( fscanf(fpthgpt, "%lf", &thgpt[j]) == 1 ) {
               sumThgpt[j] += thgpt[j];
-              sumFairnessReno[j] += (thgpt[j]/ 1000.0 / NB_SIMULATIONS)*(thgpt[j]/ 1000.0 / NB_SIMULATIONS);
-              printf("thgt%d = %6.2lf ", j, thgpt[j]);
+              printf("(%d = %6.2lf )", j, thgpt[j]);
               j++;
             }
             
 	    fclose(fpthgpt);
 
-            printf("\n");
+            printf("]\n");
 
             // High Speed Run
             sprintf(ns_command,"ns hstcp.tcl %ld %d %d %d %d\n",
@@ -108,18 +108,18 @@ void main (int argc, char **argv){
             if (!fpthgpt)
               error("cannot open hsthgpt\n");
             
+	    printf("Node Throughput: [");
             j=0;
             while( fscanf(fpthgpt, "%lf", &hsThgpt[j]) == 1 ) {
               hsSumThgpt[j] += hsThgpt[j];
-              sumFairnessHighSpeed[j] += (hsThgpt[j]/ 1000.0 / NB_SIMULATIONS)*(hsThgpt[j]/ 1000.0 / NB_SIMULATIONS);
-              printf("thgt%d = %6.2lf ", j, hsThgpt[j]);
+              printf("(%d = %6.2lf )", j, hsThgpt[j]);
               j++;
             }
 
 	    fclose(fpthgpt);		
           }
 	
-          printf("\n\n >>>> Averages <<<<\n");
+          printf("]\n\n >>>> Averages per node <<<<\n");
           for( i=0; i < nodeValue; i++ ) {
             printf("Avg Thgt%d = %6.2lf (Kbps)\n", i, sumThgpt[i] / 1000.0 / NB_SIMULATIONS);
             printf("HS Avg Thgt%d = %6.2lf (Kbps)\n", i, hsSumThgpt[i] / 1000.0 / NB_SIMULATIONS);
@@ -127,20 +127,23 @@ void main (int argc, char **argv){
 
 	  //calculates sum
           for( i=0; i < nodeValue; i++ ) {
-            renoSum += sumThgpt[i] / 1000.0 / NB_SIMULATIONS;
-            highSpeedSum += hsSumThgpt[i] / 1000.0 / NB_SIMULATIONS;
-            renoFairness_bottom += sumFairnessReno[i];
-            highSpeedFairness_bottom += sumFairnessHighSpeed[i];
+            renoSum += sumThgpt[i]/ NB_SIMULATIONS;
+            highSpeedSum += hsSumThgpt[i]/ NB_SIMULATIONS;
+            renoFairness_bottom += (sumThgpt[i]/ NB_SIMULATIONS) * (sumThgpt[i]/ NB_SIMULATIONS);
+            highSpeedFairness_bottom += (hsSumThgpt[i]/ NB_SIMULATIONS) * (hsSumThgpt[i]/ NB_SIMULATIONS);
           }
+	
+	  renoAverage = renoSum / 1000.0  / nodeValue;
+          highSpeedAverage = highSpeedSum / 1000.0  / nodeValue;
 	
 	  //output info
 	  //printf("Fairness Sum: \n Reno: %6.2lf  HS: %6.2lf  \n Fariness Top:  \n Reno: %6.2lf   HS: %6.2lf \n Fairness Bottom \n Reno: %6.2lf  HS: %6.2lf",renoSum, highSpeedSum, renoSum * renoSum, highSpeedSum * highSpeedSum,  nodeValue * renoFairness_bottom, nodeValue* highSpeedFairness_bottom);
 
 	  printf("\n\n >>>>> Overall Stats <<<<< \n");
-	  printf("Average Throughput Reno: %6.2lf \n", renoSum);
-          printf("Average Throughput High Speed: %6.2lf \n", highSpeedSum);
-          printf("Fairness Reno: %6.2lf \n", (renoSum * renoSum) / (nodeValue * (renoSum * renoSum)) );
-          printf("Fairness High Speed: %6.2lf \n", (highSpeedSum * highSpeedSum) / (nodeValue * (highSpeedSum * highSpeedSum)));
+	  printf("Average Throughput Reno: %6.2lf \n", renoAverage);
+          printf("Average Throughput High Speed: %6.2lf \n", highSpeedAverage);
+          printf("Fairness Reno: %6.2lf \n", (renoSum * renoSum) / (nodeValue * renoFairness_bottom) );
+          printf("Fairness High Speed: %6.2lf \n", (highSpeedSum * highSpeedSum) / (nodeValue * highSpeedFairness_bottom));
           
 	  // Write to the output file
 
@@ -149,7 +152,7 @@ void main (int argc, char **argv){
   	  if (!output)
     	    error("Error Opening output file 'output.txt'\n");
 
-	  fprintf(output,"%d, %ld, %d, %d, %d,%6.2lf,%6.2lf,%6.2lf,%6.2lf, \n", EXPERIMENT_COUNTER, bandwidthValue, propagationValue, delayValue, nodeValue, renoSum, highSpeedSum, (renoSum * renoSum) / (nodeValue * (renoSum * renoSum)) , (highSpeedSum * highSpeedSum) / (nodeValue * (highSpeedSum * highSpeedSum)) );
+	  fprintf(output,"%d, %ld, %d, %d, %d,%6.2lf,%6.2lf,%6.2lf,%6.2lf, \n", EXPERIMENT_COUNTER, bandwidthValue, propagationValue, delayValue, nodeValue, renoSum, highSpeedSum,(renoSum * renoSum) / (nodeValue * renoFairness_bottom), (highSpeedSum * highSpeedSum) / (nodeValue * highSpeedFairness_bottom));
  	  
 
 	  fclose(output);
