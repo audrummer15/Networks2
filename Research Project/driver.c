@@ -2,7 +2,7 @@
 #include <stdlib.h>
 #include <time.h>
 
-#define NB_SIMULATIONS 1
+#define NB_SIMULATIONS 30
 #define NB_BANDWIDTH_VALUES 8
 #define NB_DELAY_TIMES 2
 #define NB_PROPOGATION_TIMES 4
@@ -116,10 +116,11 @@ void main (int argc, char **argv){
               j++;
             }
 
-	    fclose(fpthgpt);		
+	    fclose(fpthgpt);
+	    printf("]\n");
           }
 	
-          printf("]\n\n >>>> Averages per node <<<<\n");
+          printf("\n >>>> Averages per node <<<<\n");
           for( i=0; i < nodeValue; i++ ) {
             printf("Avg Thgt%d = %6.2lf (Kbps)\n", i, sumThgpt[i] / 1000.0 / NB_SIMULATIONS);
             printf("HS Avg Thgt%d = %6.2lf (Kbps)\n", i, hsSumThgpt[i] / 1000.0 / NB_SIMULATIONS);
