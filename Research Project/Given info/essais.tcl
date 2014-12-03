@@ -5,12 +5,12 @@
 # Dates: Nov 3, 2003.
 # Notes: An ns template script containing multiple tools.
 #
-# s0   
-#  \   
+# s0
+#  \
 #   \r0______dst
-#   /  
-#  /   
-# s1   
+#   /
+#  /
+# s1
 #-----------------------------------------------------------------------------
 
 
@@ -22,7 +22,7 @@ proc finish {} {
     close $cwnd_chan
     close $queuechan
     close $filetrace
-    
+
     $fmon dump
     close $fmonfile
 
@@ -86,8 +86,8 @@ set dst [$ns node]
 $ns duplex-link $s0 $r0 10Mb 2ms DropTail
 $ns duplex-link $s1 $r0 10Mb 2ms DropTail
 
-# This link has RED queue management only 
-# for tracing purpose. 
+# This link has RED queue management only
+# for tracing purpose.
 # Because Min thresh= MaxThresh = queue limit
 set queuelimit 50
 Queue/RED set maxthresh_ $queuelimit
@@ -113,9 +113,9 @@ $fmon attach $fmonfile
 
 
 #============ just for nam simulations ===============
-#Arrange the layout 
-$ns duplex-link-op $s0 $r0  orient right-down      
-$ns duplex-link-op $s1 $r0  orient right-up 
+#Arrange the layout
+$ns duplex-link-op $s0 $r0  orient right-down
+$ns duplex-link-op $s1 $r0  orient right-up
 $ns duplex-link-op $r0 $dst orient right
 
 $ns color 0 Blue
@@ -132,6 +132,7 @@ $tcp0 set class_ 0
 
 set tcp1 [$ns create-connection TCP/Reno $s1 TCPSink $dst 0]
 $tcp1 set window_ 10000
+#Don't need the classes
 $tcp1 set class_ 1
 
 
@@ -139,7 +140,7 @@ $tcp1 set class_ 1
 set cwnd_chan [open cwnd.tr w]
 $tcp0 trace cwnd_
 $tcp0 trace rtt_
-$tcp0 attach $cwnd_chan 
+$tcp0 attach $cwnd_chan
 
 
 
@@ -170,11 +171,3 @@ $ns at $StartTime2 "$ftp1 start"
 $ns at 10s "finish"
 
 $ns run
-
-
-
-
-
-
-
-
